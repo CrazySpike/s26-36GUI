@@ -2,7 +2,20 @@
 #define PAGES_H
 
 #pragma once
+
+#include "winch.h"
+
 #include <QWidget>
+#include <QStackedWidget>
+#include <QPushButton>
+#include <QVBoxLayout>
+#include <QLabel>
+#include <QLineEdit>
+#include <QScrollArea>
+#include <QtCharts/QChartView>
+#include <QtCharts/QLineSeries>
+#include <QtCharts/QValueAxis>
+#include <QtCharts/QChart>
 
 class QLabel;
 class QPushButton;
@@ -12,17 +25,62 @@ class Pages : public QWidget {
     Q_OBJECT
 
 public:
-    enum PageType { Page1, Page2, Page3 };
-    explicit Pages(PageType type, QWidget *parent = nullptr);
+    enum PageType { Start, Login, Account, Dashboard, Winch, Settings,
+                    Sensor, Solar, Operations, Camera, Winch_Help,
+                    Find_Winch_Auto, Find_Winch_Manual, Found_Winch,
+                    Find_Winch_Help, Found_Winch_Help };
 
-signals:
-    void goToPage1();
-    void goToPage2();
-    void goToPage3();
+    explicit Pages(QWidget *parent = nullptr);
 
 private:
-    void buildPage(PageType type);
+    QStackedWidget *stack;
+
+    QWidget *createPage_Start();
+    QWidget *createPage_Login();
+    QWidget *createPage_Account();
+    QWidget *createPage_Dashboard();
+    QWidget *createPage_Winch();
+    QWidget *createPage_Settings();
+    QWidget *createPage_Sensor();
+    QWidget *createPage_Solar();
+    QWidget *createPage_Operations();
+    QWidget *createPage_Camera();
+    QWidget *createPage_Winch_Help();
+    QWidget *createPage_Find_Winch_Auto();
+    QWidget *createPage_Find_Winch_Manual();
+    QWidget *createPage_Found_Winch();
+    QWidget *createPage_Find_Winch_Help();
+    QWidget *createPage_Found_Winch_Help();
+
+    void switchPage(PageType prevPage, PageType nextPage);
+    void switchPage(PageType type);
+
+    // Put evey possible scrollable area as a scrollbar (ex. help pages and winches)
+
+    PageType lastPage;
+
     QPushButton *createButton(const QString &text, const QString &color);
+    QPushButton *createHelpButton(PageType type);
+
+    void openWinchPage(int index);
+
+    QPushButton *createWinchButton(winch entry);
+
+    std::vector<winch> winchVector;
+    winch *currentWinch = nullptr;
+
+    QVBoxLayout *winchLayout;
+
+    QLabel *winchTitleLabel;
+    QLabel *connectionLabel;
+    QLabel *idLabel;
+    QLabel *statusLabel;
+    QLabel *heightLabel;
+    QLabel *waterLabel;
+    QLabel *scheduleLabel;
+
+    int winchSelected = 0;
+    int winchCounter = 1;
 };
 
 #endif // PAGES_H
