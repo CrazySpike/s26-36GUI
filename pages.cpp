@@ -200,6 +200,8 @@ QWidget *Pages::createPage_Dashboard() {
 
     layout->addWidget(bottomBar, 0, Qt::AlignBottom); // Fixed at bottom
 
+    getConfig();
+
     for (const auto &entry : winchVector) {
         auto *newBtn = createWinchButton(entry);
         winchLayout->addWidget(newBtn);
@@ -980,9 +982,15 @@ QWidget *Pages::createPage_Found_Winch()
     });
 
     connect(addButton, &QPushButton::clicked, this, [this]() {
-        winchVector.emplace_back(winchCounter++);
+        winchCounter++;
 
-        auto *newBtn = createWinchButton(winchVector.back());
+        winch *addWinch = new winch(winchCounter);
+
+        winchVector.push_back(*addWinch);
+
+        addEntryToConfig(winchCounter);
+
+        auto *newBtn = createWinchButton(*addWinch);
 
         winchLayout->addWidget(newBtn);
 
@@ -1153,6 +1161,90 @@ QPushButton *Pages::createHelpButton(PageType type)
     }
 
     return btn;
+}
+
+void Pages::getConfig()
+{
+    QFile file(jsonName);
+    if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+        qWarning() << "Failed to open config file:" << file.errorString();
+        return;
+    }
+
+    QByteArray doc = file.readAll();
+
+    QJsonDocument loadDoc = QJsonDocument::fromJson(doc);
+    QJsonObject json = loadDoc.object();
+
+    QStringList winches;
+
+    const QJsonArray winchesArray = json["winches"].toArray();
+
+    for (const QJsonValue &entry : winchesArray) {
+        if (!entry.isObject())
+            continue;
+
+        QJsonObject obj = entry.toObject();
+
+        int number = obj["number"].toInt();
+
+        winch *addWinch = new winch(number);
+
+        winchVector.push_back(*addWinch);
+
+        winchCounter++;
+
+        // qDebug() << "Loaded app:"
+        //          << entry.id
+        //          << entry.args
+        //          << entry.imagePath
+        //          << entry.web;
+    }
+}
+
+void Pages::addEntryToConfig(int number)
+{
+    QFile file(jsonName);
+    if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+        qWarning() << "Failed to open config file:" << file.errorString();
+        return;
+    }
+
+    QJsonDocument doc = QJsonDocument::fromJson(file.readAll());
+    file.close();
+
+    QJsonObject root = doc.object();
+
+    // Add existing winches
+    QJsonArray winches = root.value("winches").toArray();
+
+    // New winch to add
+    QJsonObject newWinch;
+
+    newWinch.insert("number", number);
+    newWinch.insert("id", 12345);
+    newWinch.insert("connected", true);
+    newWinch.insert("cage_height", 2.13);
+    newWinch.insert("water_level", 4.52);
+    // "number": 3,
+    // "id": 12345,
+    // "connected": true,
+    // "cage_height": 2.13,
+    // "water_level": 4.52
+
+    winches.append(newWinch);
+
+    // Put it back
+    root.insert("winches", winches);
+
+    // Write back to file
+    if (!file.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
+        qWarning() << "Failed to open file for writing" << file.errorString();
+        return;
+    }
+
+    file.write(QJsonDocument(root).toJson(QJsonDocument::Indented));
+    file.close();
 }
 
 void Pages::openWinchPage(int index)
