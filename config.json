@@ -1,0 +1,61 @@
+{
+    "name": "Configuration of Oyster Farm",
+    "winches": [
+        {
+            "cage_height": 2.13,
+            "connected": true,
+            "id": 12345,
+            "number": 1,
+            "water_level": 4.52
+        },
+        {
+            "cage_height": 2.13,
+            "connected": true,
+            "id": 12345,
+            "number": 2,
+            "water_level": 4.52
+        },
+        {
+            "cage_height": 2.13,
+            "connected": true,
+            "id": 12345,
+            "number": 3,
+            "water_level": 4.52
+        },
+        {
+            "cage_height": 2.13,
+            "connected": true,
+            "id": 12345,
+            "number": 4,
+            "water_level": 4.52
+        },
+        {
+            "cage_height": 2.13,
+            "connected": true,
+            "id": 12345,
+            "number": 5,
+            "water_level": 4.52
+        },
+        {
+            "cage_height": 2.13,
+            "connected": true,
+            "id": 12345,
+            "number": 6,
+            "water_level": 4.52
+        },
+        {
+            "cage_height": 2.13,
+            "connected": true,
+            "id": 12345,
+            "number": 7,
+            "water_level": 4.52
+        },
+        {
+            "cage_height": 2.13,
+            "connected": true,
+            "id": 12345,
+            "number": 8,
+            "water_level": 4.52
+        }
+    ]
+}
