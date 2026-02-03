@@ -12,6 +12,11 @@
 #include <QLabel>
 #include <QLineEdit>
 #include <QScrollArea>
+#include <QStringList>
+#include <QFile>
+#include <QJsonDocument>
+#include <QJsonObject>
+#include <QJsonArray>
 #include <QtCharts/QChartView>
 #include <QtCharts/QLineSeries>
 #include <QtCharts/QValueAxis>
@@ -62,6 +67,10 @@ private:
     QPushButton *createButton(const QString &text, const QString &color);
     QPushButton *createHelpButton(PageType type);
 
+    const QString jsonName = "/Users/bwr/Qt/Widgets/s26-36GUI/config.json";
+
+    void getConfig();
+    void addEntryToConfig(int number);
     void openWinchPage(int index);
 
     QPushButton *createWinchButton(winch entry);
@@ -80,7 +89,7 @@ private:
     QLabel *scheduleLabel;
 
     int winchSelected = 0;
-    int winchCounter = 1;
+    int winchCounter = 0;
 };
 
 #endif // PAGES_H
