@@ -1,4 +1,5 @@
 #include "pages.h"
+#include "inappmessage.h"
 
 Pages::Pages(QWidget *parent) : QWidget(parent)
 {
@@ -15,7 +16,7 @@ Pages::Pages(QWidget *parent) : QWidget(parent)
     stack->addWidget(createPage_Settings());                // index 5
     stack->addWidget(createPage_Sensor());                  // index 6
     stack->addWidget(createPage_Solar());                   // index 7
-    stack->addWidget(createPage_Operations());              // index 8
+    stack->addWidget(createPage_Winch_Operations());        // index 8
     stack->addWidget(createPage_Camera());                  // index 9
     stack->addWidget(createPage_Winch_Help());              // index 10
     stack->addWidget(createPage_Find_Winch_Auto());         // index 11
@@ -23,6 +24,7 @@ Pages::Pages(QWidget *parent) : QWidget(parent)
     stack->addWidget(createPage_Found_Winch());             // index 13
     stack->addWidget(createPage_Find_Winch_Help());         // index 14
     stack->addWidget(createPage_Found_Winch_Help());        // index 15
+    stack->addWidget(createPage_All_Operations());        // index 16
 
     stack->setCurrentIndex(Start);
 }
@@ -201,6 +203,7 @@ QWidget *Pages::createPage_Dashboard() {
     layout->addWidget(bottomBar, 0, Qt::AlignBottom); // Fixed at bottom
 
     getConfig();
+    getSchedule();
 
     for (const auto &entry : winchVector) {
         auto *newBtn = createWinchButton(entry);
@@ -273,13 +276,7 @@ QWidget *Pages::createPage_Winch()
     layout->addWidget(waterLabel);
 
     // --- Schedule ---
-    scheduleLabel = new QLabel(
-        "Next Scheduled Action(s):\n"
-        "    11:30AM 10/10/25 UP\n"
-        "    12:00PM 10/10/25 DOWN\n"
-        "    11:30AM 10/11/25 UP\n"
-        "    12:00PM 10/11/25 DOWN"
-        );
+    scheduleLabel = new QLabel();
     scheduleLabel->setAlignment(Qt::AlignLeft | Qt::AlignTop);
     scheduleLabel->setStyleSheet("font-size: 18px;");
     scheduleLabel->setWordWrap(true);
@@ -308,7 +305,7 @@ QWidget *Pages::createPage_Winch()
         switchPage(Winch, Solar);
     });
     connect(operationButton, &QPushButton::clicked, this, [this]() {
-        switchPage(Winch, Operations);
+        switchPage(Winch, Winch_Operations);
     });
     connect(cameraButton, &QPushButton::clicked, this, [this]() {
         switchPage(Winch, Camera);
@@ -357,7 +354,8 @@ QWidget *Pages::createPage_Settings()
     operationsLabel->setWordWrap(true); // ensure long lines wrap
 
     connect(operationsButton, &QPushButton::clicked, this, [this]() {
-        switchPage(Settings, Operations);
+        // operationSchedules();
+        switchPage(Settings, All_Operations);
     });
 
     QString user =
@@ -662,7 +660,7 @@ QWidget *Pages::createPage_Solar()
     return page;
 }
 
-QWidget *Pages::createPage_Operations()
+QWidget *Pages::createPage_Winch_Operations()
 {
     auto *page = new QWidget();
     auto *layout = new QVBoxLayout(page);
@@ -676,20 +674,32 @@ QWidget *Pages::createPage_Operations()
     middleLayout->setContentsMargins(10, 10, 10, 10);
     middleLayout->setSpacing(15);
 
-    QString info =
-        "Appears as a calendar with options to\n"
-        "show day, week, month\n\n"
-        "Should show every past action\n"
-        "Should show every future planned action\n"
-        "with option to set to auto or manually adjust\n\n"
-        "Options for displaying any number of farms at once";
+    winchCalendar = new QCalendarWidget();
+    winchCalendar->setVerticalHeaderFormat(QCalendarWidget::NoVerticalHeader);
+    middleLayout->addWidget(winchCalendar);
 
-    QLabel *infoLabel = new QLabel(info, this);
-    infoLabel->setAlignment(Qt::AlignLeft | Qt::AlignTop);
-    infoLabel->setStyleSheet("font-size: 18px;");
-    infoLabel->setWordWrap(true); // ensure long lines wrap
+    connect(winchCalendar, &QCalendarWidget::clicked,
+            this, [=](const QDate &date) {
 
-    middleLayout->addWidget(infoLabel);
+                if (winchEvents.contains(date)) {
+                    // QString text = winchEvents[date].first();
+                    // QLabel *operations = new QLabel(text);
+
+                    // auto *msg = new InAppMessage(this, operations);
+                    // msg->move(this->rect().center() - msg->rect().center());
+                    // msg->show();
+
+
+                    QString text = winchEvents.value(date).join("\n");
+
+                    QLabel *operations = new QLabel(text);
+                    operations->setWordWrap(true);
+
+                    auto *msg = new InAppMessage(this, operations);
+                    msg->move(this->rect().center() - msg->rect().center());
+                    msg->show();
+                }
+            });
 
     layout->addWidget(middleBar, 1);
 
@@ -698,7 +708,7 @@ QWidget *Pages::createPage_Operations()
     layout->addWidget(backButton, 0, Qt::AlignBottom); // Fixed at bottom
 
     connect(backButton, &QPushButton::clicked, this, [this]() {
-        switchPage(Operations, lastPage);
+        switchPage(Winch_Operations, lastPage);
     });
 
     return page;
@@ -718,15 +728,12 @@ QWidget *Pages::createPage_Camera()
     middleLayout->setContentsMargins(10, 10, 10, 10);
     middleLayout->setSpacing(15);
 
-    QString info =
-        "List of recent photos";
+    imagesLabel = new QLabel();
+    imagesLabel->setAlignment(Qt::AlignLeft | Qt::AlignTop);
+    imagesLabel->setStyleSheet("font-size: 18px;");
+    imagesLabel->setWordWrap(true); // ensure long lines wrap
 
-    QLabel *infoLabel = new QLabel(info, this);
-    infoLabel->setAlignment(Qt::AlignLeft | Qt::AlignTop);
-    infoLabel->setStyleSheet("font-size: 18px;");
-    infoLabel->setWordWrap(true); // ensure long lines wrap
-
-    middleLayout->addWidget(infoLabel);
+    middleLayout->addWidget(imagesLabel);
 
     layout->addWidget(middleBar, 1);
 
@@ -1079,6 +1086,52 @@ QWidget *Pages::createPage_Found_Winch_Help()
     return page;
 }
 
+QWidget *Pages::createPage_All_Operations()
+{
+    auto *page = new QWidget();
+    auto *layout = new QVBoxLayout(page);
+    auto *label = new QLabel("All Operations Schedule");
+    label->setAlignment(Qt::AlignCenter);
+    label->setStyleSheet("font-size: 24px; font-weight: bold;");
+    layout->addWidget(label, 0, Qt::AlignTop);
+
+    auto *middleBar = new QWidget();
+    auto *middleLayout = new QVBoxLayout(middleBar);
+    middleLayout->setContentsMargins(10, 10, 10, 10);
+    middleLayout->setSpacing(15);
+
+    allCalendars = new QCalendarWidget();
+    allCalendars->setVerticalHeaderFormat(QCalendarWidget::NoVerticalHeader);
+    middleLayout->addWidget(allCalendars);
+
+    connect(allCalendars, &QCalendarWidget::clicked,
+            this, [=](const QDate &date) {
+
+                if (allEvents.contains(date)) {
+                    QString text = allEvents.value(date).join("\n");
+
+                    QLabel *operations = new QLabel(text);
+                    operations->setWordWrap(true);
+
+                    auto *msg = new InAppMessage(this, operations);
+                    msg->move(this->rect().center() - msg->rect().center());
+                    msg->show();
+                }
+            });
+
+    layout->addWidget(middleBar, 1);
+
+    auto *backButton = createButton("Back", "#2196F3");
+
+    layout->addWidget(backButton, 0, Qt::AlignBottom); // Fixed at bottom
+
+    connect(backButton, &QPushButton::clicked, this, [this]() {
+        switchPage(Winch_Operations, lastPage);
+    });
+
+    return page;
+}
+
 void Pages::switchPage(PageType prevPage, PageType nextPage)
 {
     lastPage = prevPage;
@@ -1187,19 +1240,34 @@ void Pages::getConfig()
         QJsonObject obj = entry.toObject();
 
         int number = obj["number"].toInt();
+        bool connected = obj["connected"].toBool();
+        bool isDown = obj["is_down"].toBool();
+        double cageHeight = obj["cage_height"].toDouble();
+        double waterLevel = obj["water_level"].toDouble();
+
+        QStringList operations;
+        for (const QJsonValue &arguments : obj["operations_schedule"].toArray())
+            operations.emplace_back(arguments.toString());
+
+        QStringList images;
+        for (const QJsonValue &arguments : obj["images"].toArray())
+            images.emplace_back(arguments.toString());
 
         winch *addWinch = new winch(number);
+
+        addWinch->addConnection(connected);
+        addWinch->addSubmersion(isDown);
+        addWinch->addCageHeight(cageHeight);
+        addWinch->addWaterLevel(waterLevel);
+        addWinch->addOperationsSchedule(operations);
+        addWinch->addImages(images);
 
         winchVector.push_back(*addWinch);
 
         winchCounter++;
-
-        // qDebug() << "Loaded app:"
-        //          << entry.id
-        //          << entry.args
-        //          << entry.imagePath
-        //          << entry.web;
     }
+
+    file.close();
 }
 
 void Pages::addEntryToConfig(int number)
@@ -1226,11 +1294,6 @@ void Pages::addEntryToConfig(int number)
     newWinch.insert("connected", true);
     newWinch.insert("cage_height", 2.13);
     newWinch.insert("water_level", 4.52);
-    // "number": 3,
-    // "id": 12345,
-    // "connected": true,
-    // "cage_height": 2.13,
-    // "water_level": 4.52
 
     winches.append(newWinch);
 
@@ -1239,11 +1302,58 @@ void Pages::addEntryToConfig(int number)
 
     // Write back to file
     if (!file.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
-        qWarning() << "Failed to open file for writing" << file.errorString();
+        qWarning() << "Failed to open file for writing:" << file.errorString();
         return;
     }
 
     file.write(QJsonDocument(root).toJson(QJsonDocument::Indented));
+    file.close();
+}
+
+void Pages::getSchedule()
+{
+    QFile file(csvName);
+    if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+        qWarning() << "Failed to open schedule file:" << file.errorString();
+        return;
+    }
+
+    QTextStream in(&file);
+
+    // Read header line (ignore it)
+    in.readLine();
+
+    while (!in.atEnd()) {
+        QString line = in.readLine();
+        QStringList fields = line.split(',');
+
+        if (fields.size() != 6) {
+            continue; // Skip malformed lines
+        }
+
+        Schedule entry;
+        entry.winchNumber = fields[0].toInt();
+        entry.date = QDate(fields[1].toInt(), fields[2].toInt(), fields[3].toInt());
+        entry.time = QTime::fromString(fields[4], "hh:mm");
+        entry.type = fields[5];
+
+        schedule.append(entry);
+    }
+
+    // for (const Schedule &entry : schedule) {
+    //     qDebug() << "Winch Number:" << entry.winchNumber
+    //              << "Date:" << entry.date.toString()
+    //              << "Time:" << entry.time.toString()
+    //              << "Type:" << entry.type;
+    // }
+
+    for (const Schedule &entry : std::as_const(schedule)) {
+        allEvents[entry.date] << "Winch " + QString::number(entry.winchNumber) + ":\n    " +
+                                     entry.time.toString() + " " + entry.type + "\n";
+        // qDebug() << "Winch " + QString::number(entry.winchNumber) + ":\n    " +
+        //                      entry.time.toString() + " " + entry.type + "\n";
+    }
+
     file.close();
 }
 
@@ -1271,11 +1381,7 @@ void Pages::openWinchPage(int index)
         connectionLabel->setStyleSheet("font-size: 18px; color: red;");
     }
 
-    statusLabel->setText(
-        currentWinch->isDown()
-            ? "Cage Status: DOWN"
-            : "Cage Status: UP"
-        );
+    statusLabel->setText(currentWinch->displayCageStatus());
 
     heightLabel->setText(
         "Cage Height: " +
@@ -1286,6 +1392,19 @@ void Pages::openWinchPage(int index)
         "Water Level: " +
         QString::number(currentWinch->displayWaterLevel()) + " ft"
         );
+
+    scheduleLabel->setText(currentWinch->displayOperationsSchedule());
+
+    winchEvents.clear();
+
+    for (const Schedule &entry : std::as_const(schedule)) {
+        if (entry.winchNumber == currentWinch->displayNumber()) {
+            winchEvents[entry.date] << entry.time.toString() + " " + entry.type + "\n";
+            // qDebug() << entry.time.toString() + " " + entry.type + "\n";
+        }
+    }
+
+    imagesLabel->setText(currentWinch->displayImages());
 
     switchPage(Dashboard, Winch);
 }
