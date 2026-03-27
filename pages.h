@@ -21,6 +21,9 @@
 #include <QtCharts/QLineSeries>
 #include <QtCharts/QValueAxis>
 #include <QtCharts/QChart>
+#include <QCalendarWidget>
+#include <QDate>
+#include <QListWidget>
 
 class QLabel;
 class QPushButton;
@@ -31,9 +34,17 @@ class Pages : public QWidget {
 
 public:
     enum PageType { Start, Login, Account, Dashboard, Winch, Settings,
-                    Sensor, Solar, Operations, Camera, Winch_Help,
+                    Sensor, Solar, Winch_Operations, Camera, Winch_Help,
                     Find_Winch_Auto, Find_Winch_Manual, Found_Winch,
-                    Find_Winch_Help, Found_Winch_Help };
+                    Find_Winch_Help, Found_Winch_Help, All_Operations };
+
+    struct Schedule {
+        int winchNumber;
+        QDate date;
+        QTime time;
+        QString type;
+    };
+
 
     explicit Pages(QWidget *parent = nullptr);
 
@@ -48,7 +59,7 @@ private:
     QWidget *createPage_Settings();
     QWidget *createPage_Sensor();
     QWidget *createPage_Solar();
-    QWidget *createPage_Operations();
+    QWidget *createPage_Winch_Operations();
     QWidget *createPage_Camera();
     QWidget *createPage_Winch_Help();
     QWidget *createPage_Find_Winch_Auto();
@@ -56,6 +67,7 @@ private:
     QWidget *createPage_Found_Winch();
     QWidget *createPage_Find_Winch_Help();
     QWidget *createPage_Found_Winch_Help();
+    QWidget *createPage_All_Operations();
 
     void switchPage(PageType prevPage, PageType nextPage);
     void switchPage(PageType type);
@@ -68,9 +80,11 @@ private:
     QPushButton *createHelpButton(PageType type);
 
     const QString jsonName = "/Users/bwr/Qt/Widgets/s26-36GUI/config.json";
+    const QString csvName = "/Users/bwr/Qt/Widgets/s26-36GUI/schedule.csv";
 
     void getConfig();
     void addEntryToConfig(int number);
+    void getSchedule();
     void openWinchPage(int index);
 
     QPushButton *createWinchButton(winch entry);
@@ -87,9 +101,20 @@ private:
     QLabel *heightLabel;
     QLabel *waterLabel;
     QLabel *scheduleLabel;
+    QLabel *imagesLabel;
+
+    QLabel *allSchedulesLabel;
 
     int winchSelected = 0;
     int winchCounter = 0;
+
+    QList<Schedule> schedule;
+
+    QCalendarWidget *winchCalendar;
+    QCalendarWidget *allCalendars;
+
+    QMap<QDate, QStringList> allEvents;
+    QMap<QDate, QStringList> winchEvents;
 };
 
 #endif // PAGES_H
