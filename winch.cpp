@@ -83,51 +83,25 @@ QString winch::displayOperationsSchedule()
     return schedule;
 }
 
-QString winch::displayImages()
+QVector<QPixmap> winch::displayImages()
 {
-    QString images = "List of Recent Photos:";
+    QVector<QPixmap> images;
 
     for (const QString &entry : std::as_const(winchImages))
-        images += "\n" + entry;
+    {
+        QPixmap pixmap;
+
+        if (pixmap.load(imagesPath + entry))
+        {
+            images.append(pixmap);
+            // qDebug() << entry;
+        }
+        else
+        {
+            qDebug() << "Failed to load image:" << entry;
+        }
+    }
 
     return images;
-}
-
-#include "winch.h"
-
-winch::winch(int num) {
-    winchNumber = num;
-    winchID = 12345;
-    connected = true;
-    cageHeight = 2.13;
-    waterLevel = 4.52;
-}
-
-int winch::displayNumber() {
-    return winchNumber;
-}
-
-int winch::displayID()
-{
-    return winchID;
-}
-
-bool winch::isConnected()
-{
-    return connected;
-}
-
-bool winch::isDown() {
-    return cageDown;
-}
-
-double winch::displayCageHeight()
-{
-    return cageHeight;
-}
-
-double winch::displayWaterLevel()
-{
-    return waterLevel;
 }
 
