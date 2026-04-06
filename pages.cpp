@@ -20,11 +20,10 @@ Pages::Pages(QWidget *parent) : QWidget(parent)
     stack->addWidget(createPage_Camera());                  // index 9
     stack->addWidget(createPage_Winch_Help());              // index 10
     stack->addWidget(createPage_Find_Winch_Auto());         // index 11
-    stack->addWidget(createPage_Find_Winch_Manual());       // index 12
-    stack->addWidget(createPage_Found_Winch());             // index 13
-    stack->addWidget(createPage_Find_Winch_Help());         // index 14
-    stack->addWidget(createPage_Found_Winch_Help());        // index 15
-    stack->addWidget(createPage_All_Operations());        // index 16
+    stack->addWidget(createPage_Found_Winch());             // index 12
+    stack->addWidget(createPage_Find_Winch_Help());         // index 13
+    stack->addWidget(createPage_Found_Winch_Help());        // index 14
+    stack->addWidget(createPage_All_Operations());          // index 15
 
     stack->setCurrentIndex(Start);
 }
@@ -728,12 +727,16 @@ QWidget *Pages::createPage_Camera()
     middleLayout->setContentsMargins(10, 10, 10, 10);
     middleLayout->setSpacing(15);
 
-    imagesLabel = new QLabel();
-    imagesLabel->setAlignment(Qt::AlignLeft | Qt::AlignTop);
-    imagesLabel->setStyleSheet("font-size: 18px;");
-    imagesLabel->setWordWrap(true); // ensure long lines wrap
+    auto *scrollArea = new QScrollArea();
+    scrollArea->setWidgetResizable(true);
 
-    middleLayout->addWidget(imagesLabel);
+    auto *scrollWidget = new QWidget();
+    cameraScrollLayout = new QVBoxLayout(scrollWidget);
+
+    scrollWidget->setLayout(cameraScrollLayout);
+    scrollArea->setWidget(scrollWidget);
+
+    middleLayout->addWidget(scrollArea);
 
     layout->addWidget(middleBar, 1);
 
@@ -855,11 +858,26 @@ QWidget *Pages::createPage_Find_Winch_Auto()
 
     layout->addWidget(scrollArea, 1);
 
-    auto *newBtn = new QPushButton("Test");
+    auto *newBtnA = new QPushButton("Winch A");
+    auto *newBtnB = new QPushButton("Winch B");
+    auto *newBtnC = new QPushButton("Winch C");
+    auto *newBtnD = new QPushButton("Winch D");
 
-    searchLayout->addWidget(newBtn);
+    searchLayout->addWidget(newBtnA);
+    searchLayout->addWidget(newBtnB);
+    searchLayout->addWidget(newBtnC);
+    searchLayout->addWidget(newBtnD);
 
-    connect(newBtn, &QPushButton::clicked, this, [this]() {
+    connect(newBtnA, &QPushButton::clicked, this, [this]() {
+        switchPage(Find_Winch_Auto, Found_Winch);
+    });
+    connect(newBtnB, &QPushButton::clicked, this, [this]() {
+        switchPage(Find_Winch_Auto, Found_Winch);
+    });
+    connect(newBtnC, &QPushButton::clicked, this, [this]() {
+        switchPage(Find_Winch_Auto, Found_Winch);
+    });
+    connect(newBtnD, &QPushButton::clicked, this, [this]() {
         switchPage(Find_Winch_Auto, Found_Winch);
     });
 
@@ -868,81 +886,12 @@ QWidget *Pages::createPage_Find_Winch_Auto()
     auto *bottomLayout = new QHBoxLayout(bottomBar);
 
     auto *backButton = createButton("Back", "#2196F3");
-    auto *manualButton = createButton("Manual Search", "#4CAF50");
 
     bottomLayout->addWidget(backButton);
-    bottomLayout->addWidget(manualButton);
     layout->addWidget(bottomBar, 0, Qt::AlignBottom);
 
     connect(backButton, &QPushButton::clicked, this, [this]() {
         switchPage(Find_Winch_Auto, Dashboard);
-    });
-
-    connect(manualButton, &QPushButton::clicked, this, [this]() {
-        switchPage(Find_Winch_Auto, Find_Winch_Manual);
-    });
-
-    return page;
-}
-
-QWidget *Pages::createPage_Find_Winch_Manual()
-{
-    auto *page = new QWidget();
-    auto *layout = new QVBoxLayout(page);
-
-    auto *topBar = new QWidget();
-    auto *topLayout = new QGridLayout(topBar);
-
-    topLayout->setContentsMargins(0, 0, 0, 0);
-    topLayout->setColumnStretch(0, 1);
-    topLayout->setColumnStretch(1, 0);
-    topLayout->setColumnStretch(2, 1);
-
-    // --- Title ---
-    auto *titleLabel = new QLabel("Find Nearby Winches");
-    titleLabel->setAlignment(Qt::AlignCenter);
-    titleLabel->setStyleSheet("font-size: 24px; font-weight: bold;");
-    topLayout->addWidget(titleLabel, 0, 1);
-
-    // --- Help button ---
-    auto *helpButton = createHelpButton(Find_Winch_Manual);
-    topLayout->addWidget(helpButton, 0, 2, Qt::AlignRight | Qt::AlignVCenter);
-
-    layout->addWidget(topBar, 0, Qt::AlignTop);
-
-    // --- Scrollable area setup ---
-    auto *scrollArea = new QScrollArea();
-    scrollArea->setWidgetResizable(true);
-    scrollArea->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-
-    // --- Container inside scroll area for Winch buttons ---
-    auto *scrollWidget = new QWidget();
-    auto *searchLayout = new QVBoxLayout(scrollWidget);
-    searchLayout->setAlignment(Qt::AlignTop);
-    scrollWidget->setLayout(searchLayout);
-    scrollArea->setWidget(scrollWidget);
-
-    layout->addWidget(scrollArea, 1);
-
-    auto *newBtn = new QPushButton("Test");
-
-    searchLayout->addWidget(newBtn);
-
-    connect(newBtn, &QPushButton::clicked, this, [this]() {
-        switchPage(Find_Winch_Manual, Found_Winch);
-    });
-
-    // --- Bottom bar ---
-    auto *bottomBar = new QWidget();
-    auto *bottomLayout = new QHBoxLayout(bottomBar);
-
-    auto *backButton = createButton("Back", "#2196F3");
-
-    bottomLayout->addWidget(backButton);
-    layout->addWidget(bottomBar, 0, Qt::AlignBottom);
-
-    connect(backButton, &QPushButton::clicked, this, [this]() {
-        switchPage(Find_Winch_Manual, Find_Winch_Auto);
     });
 
     return page;
@@ -972,6 +921,25 @@ QWidget *Pages::createPage_Found_Winch()
     topLayout->addWidget(helpButton, 0, 2, Qt::AlignRight | Qt::AlignVCenter);
 
     layout->addWidget(topBar, 0, Qt::AlignTop);
+
+    auto *middleBar = new QWidget();
+    auto *middleLayout = new QVBoxLayout(middleBar);
+    middleLayout->setContentsMargins(10, 10, 10, 10);
+    middleLayout->setSpacing(15);
+
+    QString info =
+        "Winch information:\n\n"
+        "ID: 12345\n"
+        "Location: Oyster Farm 3";
+
+    QLabel *infoLabel = new QLabel(info, this);
+    infoLabel->setAlignment(Qt::AlignLeft | Qt::AlignTop);
+    infoLabel->setStyleSheet("font-size: 18px;");
+    infoLabel->setWordWrap(true); // ensure long lines wrap
+
+    middleLayout->addWidget(infoLabel);
+
+    layout->addWidget(middleBar, 1);
 
     // --- Bottom bar ---
     auto *bottomBar = new QWidget();
@@ -1023,9 +991,8 @@ QWidget *Pages::createPage_Find_Winch_Help()
 
     QString info =
         "This page allows the user to see all winches that"
-        "are available to add nearby. The user can use the"
-        "“Manual Search” button to add a winch that"
-        "isn’t found/listed.";
+        "are available to add nearby that the server has"
+        "picked up.";
 
     QLabel *infoLabel = new QLabel(info, this);
     infoLabel->setAlignment(Qt::AlignLeft | Qt::AlignTop);
@@ -1190,14 +1157,6 @@ QPushButton *Pages::createHelpButton(PageType type)
         {
             connect(btn, &QPushButton::clicked, this, [this]() {
                 switchPage(Find_Winch_Auto, Find_Winch_Help);
-            });
-
-            break;
-        }
-        case Find_Winch_Manual:
-        {
-            connect(btn, &QPushButton::clicked, this, [this]() {
-                switchPage(Find_Winch_Manual, Find_Winch_Help);
             });
 
             break;
@@ -1404,7 +1363,26 @@ void Pages::openWinchPage(int index)
         }
     }
 
-    imagesLabel->setText(currentWinch->displayImages());
+    if (cameraScrollLayout)
+    {
+        QLayoutItem *item;
+        while ((item = cameraScrollLayout->takeAt(0)) != nullptr)
+        {
+            delete item->widget();
+            delete item;
+        }
+
+        // Add new images
+        for (const QPixmap &pixmap : currentWinch->displayImages())
+        {
+            QLabel *imgLabel = new QLabel();
+            imgLabel->setAlignment(Qt::AlignCenter);
+            imgLabel->setPixmap(pixmap.scaled(
+                400, 300, Qt::KeepAspectRatio, Qt::SmoothTransformation));
+
+            cameraScrollLayout->addWidget(imgLabel);
+        }
+    }
 
     switchPage(Dashboard, Winch);
 }
