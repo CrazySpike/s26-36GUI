@@ -35,7 +35,7 @@ class Pages : public QWidget {
 public:
     enum PageType { Start, Login, Account, Dashboard, Winch, Settings,
                     Sensor, Solar, Winch_Operations, Camera, Winch_Help,
-                    Find_Winch_Auto, Find_Winch_Manual, Found_Winch,
+                    Find_Winch_Auto, Found_Winch,
                     Find_Winch_Help, Found_Winch_Help, All_Operations };
 
     struct Schedule {
@@ -63,7 +63,6 @@ private:
     QWidget *createPage_Camera();
     QWidget *createPage_Winch_Help();
     QWidget *createPage_Find_Winch_Auto();
-    QWidget *createPage_Find_Winch_Manual();
     QWidget *createPage_Found_Winch();
     QWidget *createPage_Find_Winch_Help();
     QWidget *createPage_Found_Winch_Help();
@@ -101,7 +100,8 @@ private:
     QLabel *heightLabel;
     QLabel *waterLabel;
     QLabel *scheduleLabel;
-    QLabel *imagesLabel;
+
+    QVBoxLayout *cameraScrollLayout = nullptr;
 
     QLabel *allSchedulesLabel;
 
