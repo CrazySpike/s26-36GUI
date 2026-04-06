@@ -2,6 +2,10 @@
 #define WINCH_H
 
 #include <QStringList>
+#include <QImage>
+#include <QPixmap>
+#include <QBuffer>
+#include <QDebug>
 
 class winch
 {
@@ -23,7 +27,7 @@ public:
     double displayCageHeight();
     double displayWaterLevel();
     QString displayOperationsSchedule();
-    QString displayImages();
+    QVector<QPixmap> displayImages();
 
 private:
     int winchNumber = 0;
@@ -33,6 +37,7 @@ private:
     double cageHeight = 0;
     double waterLevel = 0;
     QStringList operationsSchedule;
+    const QString imagesPath = "/Users/bwr/Qt/Widgets/s26-36GUI/images/";
     QStringList winchImages;
 
 };
