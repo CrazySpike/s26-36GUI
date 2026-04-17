@@ -59,6 +59,36 @@ QWidget *Pages::createPage_Start() {
     layout->addWidget(middleBar, 0, Qt::AlignHCenter);
     layout->addItem(new QSpacerItem(0, 0, QSizePolicy::Minimum, QSizePolicy::Expanding));
 
+    // Start network connection
+    client = new Network(this);
+
+    connect(client, &Network::requestFinished, [this](const QString &response) {
+        // lastResponse = response;
+        // qDebug() << lastResponse;
+        // qDebug() << "Success:" << lastResponse;
+        QJsonDocument doc = QJsonDocument::fromJson(response.toUtf8());
+        if (!doc.isObject()) {
+            qDebug() << "Invalid JSON";
+            return;
+        }
+
+        QJsonObject obj = doc.object();
+
+        // if (obj["status"] != "success") {
+        //     qDebug() << "Server error:" << obj["message"].toString();
+        //     return;
+        // }
+
+        // Save full response if you want
+        lastResponse = response;
+
+        qDebug() << "Response received:" << obj;
+    });
+
+    connect(client, &Network::requestError, [](const QString &error) {
+        qDebug() << "Error:" << error;
+    });
+
     return page;
 }
 
@@ -315,7 +345,7 @@ QWidget *Pages::createPage_Winch()
     auto *bottomLayout = new QHBoxLayout(bottomBar);
 
     auto *backButton = createButton("Back", "#2196F3");
-    auto *editButton = createButton("Edit", "#4CAF50");
+    auto *editButton = createButton("Move", "#4CAF50");
 
     bottomLayout->addWidget(backButton);
     bottomLayout->addWidget(editButton);
@@ -323,6 +353,82 @@ QWidget *Pages::createPage_Winch()
 
     connect(backButton, &QPushButton::clicked, this, [this]() {
         switchPage(Winch, Dashboard);
+    });
+
+    connect(client, &Network::requestFinished, this, [this](const QString &endpoint, const QString &response) {
+        // QString command;
+
+        // client->get(server + "/status");
+
+        // qDebug() << lastResponse;
+
+        // if (lastResponse == "up")
+        //     command = "down";
+        // else if (lastResponse == "down")
+        //     command = "up";
+
+        // QJsonObject json;
+        // json["command"] = command;
+
+        // client->post(server + "/command", json);
+
+        // qDebug() << command;
+
+        // QJsonDocument doc = QJsonDocument::fromJson(response.toUtf8());
+        // if (!doc.isObject()) return;
+
+        // QJsonObject obj = doc.object();
+        // // if (obj["status"] != "success") return;
+
+        // QString status = obj["status"].toString();
+
+        // // QString direction = winch["direction"].toString();
+
+        // // --- Update UI ---
+        // // statusLabel->setText("Direction: " + direction);
+        // // heightLabel->setText("Height: " + QString::number(winch["height"].toDouble()));
+        // // waterLabel->setText("Water: " + QString::number(winch["water_level"].toDouble()));
+        // // connectionLabel->setText(winch["connected"].toBool() ? "Connected" : "Disconnected");
+        // // idLabel->setText("ID: " + winch["id"].toString());
+
+        // // --- Decide next command ---
+        // QString command = (status == "up") ? "down" : "up";
+
+        // QJsonObject json;
+        // json["command"] = command;
+
+        // client->post(server + "/command", json);
+
+        // qDebug() << "Sent command:" << command;
+
+        QJsonDocument doc = QJsonDocument::fromJson(response.toUtf8());
+        if (!doc.isObject()) return;
+
+        QJsonObject obj = doc.object();
+        qDebug() << "Response received:" << obj;
+
+        if (endpoint == "/status") {
+
+            QString status = obj["winch_status"].toString();
+
+            QString command = (status == "up") ? "down" : "up";
+
+            QJsonObject json;
+            json["command"] = command;
+
+            client->post(server + "/command", json);
+
+            qDebug() << "Sent command:" << command;
+        }
+
+        else if (endpoint == "/command") {
+            qDebug() << "Command acknowledged";
+        }
+    });
+
+    connect(editButton, &QPushButton::clicked, this, [this]() {
+        client->get(server + "/status");
+        qDebug() << "Requested status...";
     });
 
     return page;

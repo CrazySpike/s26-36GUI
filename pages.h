@@ -4,6 +4,7 @@
 #pragma once
 
 #include "winch.h"
+#include "network.h"
 
 #include <QWidget>
 #include <QStackedWidget>
@@ -115,6 +116,11 @@ private:
 
     QMap<QDate, QStringList> allEvents;
     QMap<QDate, QStringList> winchEvents;
+
+    Network *client;
+    const QString server = "http://128.173.90.175:3001";
+
+    QString lastResponse;
 };
 
 #endif // PAGES_H
