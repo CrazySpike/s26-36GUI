@@ -15,7 +15,7 @@ public:
     void addID(const int id);
     void addConnection(const bool conn);
     void addSubmersion(const bool sub);
-    void addCageHeight(const double height);
+    void addTemp(const double temp);
     void addWaterLevel(const double level);
     void addOperationsSchedule(const QStringList schedule);
     void addImages(const QStringList images);
@@ -24,7 +24,7 @@ public:
     int displayID();
     bool isConnected();
     QString displayCageStatus();
-    double displayCageHeight();
+    double displayTemp();
     double displayWaterLevel();
     QString displayOperationsSchedule();
     QVector<QPixmap> displayImages();
@@ -34,7 +34,7 @@ private:
     int winchID = 0;
     bool connected = false;
     bool cageDown = false;
-    double cageHeight = 0;
+    double waterTemp = 0;
     double waterLevel = 0;
     QStringList operationsSchedule;
     const QString imagesPath = "/Users/bwr/Qt/Widgets/s26-36GUI/images/";

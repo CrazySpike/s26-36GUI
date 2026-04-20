@@ -98,7 +98,7 @@ private:
     QLabel *connectionLabel;
     QLabel *idLabel;
     QLabel *statusLabel;
-    QLabel *heightLabel;
+    QLabel *tempLabel;
     QLabel *waterLabel;
     QLabel *scheduleLabel;
 

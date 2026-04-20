@@ -2,59 +2,81 @@
     "name": "Configuration of Oyster Farm",
     "winches": [
         {
-            "cage_height": 2.13,
+            "water_temp": 71,
             "connected": true,
             "id": 12345,
+            "images": [
+                "Image1.png",
+                "Image2.png",
+                "Image3.png"
+            ],
+            "is_down": true,
             "number": 1,
+            "operations_schedule": [
+                "11:30AM 10/10/25 UP",
+                "12:00PM 10/10/25 DOWN",
+                "11:30AM 10/11/25 UP",
+                "12:00PM 10/11/25 DOWN"
+            ],
             "water_level": 4.52
         },
         {
-            "cage_height": 2.13,
-            "connected": true,
-            "id": 12345,
+            "water_temp": 71,
+            "connected": false,
+            "id": 73627,
+            "images": [
+                "Image4.png",
+                "Image5.png",
+                "Image6.png"
+            ],
+            "is_down": true,
             "number": 2,
-            "water_level": 4.52
+            "operations_schedule": [
+                "11:30AM 10/10/25 DOWN",
+                "12:00PM 10/10/25 UP",
+                "11:30AM 10/11/25 DOWN",
+                "12:00PM 10/11/25 UP"
+            ],
+            "water_level": 2.52
         },
         {
-            "cage_height": 2.13,
+            "water_temp": 71,
             "connected": true,
-            "id": 12345,
+            "id": 93804,
+            "images": [
+                "Image7.png",
+                "Image8.png",
+                "Image9.png"
+            ],
+            "is_down": true,
             "number": 3,
-            "water_level": 4.52
+            "operations_schedule": [
+                "11:00AM 10/10/25 UP",
+                "12:30PM 10/10/25 DOWN",
+                "11:00AM 10/11/25 UP",
+                "12:30PM 10/11/25 DOWN"
+            ],
+            "water_level": 8.52
         },
         {
-            "cage_height": 2.13,
+            "water_temp": 71,
             "connected": true,
             "id": 12345,
             "number": 4,
             "water_level": 4.52
         },
         {
-            "cage_height": 2.13,
+            "water_temp": 71,
             "connected": true,
             "id": 12345,
             "number": 5,
             "water_level": 4.52
         },
         {
-            "cage_height": 2.13,
+            "water_temp": 71,
             "connected": true,
             "id": 12345,
             "number": 6,
-            "water_level": 4.52
-        },
-        {
-            "cage_height": 2.13,
-            "connected": true,
-            "id": 12345,
-            "number": 7,
-            "water_level": 4.52
-        },
-        {
-            "cage_height": 2.13,
-            "connected": true,
-            "id": 12345,
-            "number": 8,
             "water_level": 4.52
         }
     ]

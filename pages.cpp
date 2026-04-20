@@ -74,12 +74,6 @@ QWidget *Pages::createPage_Start() {
 
         QJsonObject obj = doc.object();
 
-        // if (obj["status"] != "success") {
-        //     qDebug() << "Server error:" << obj["message"].toString();
-        //     return;
-        // }
-
-        // Save full response if you want
         lastResponse = response;
 
         qDebug() << "Response received:" << obj;
@@ -294,10 +288,10 @@ QWidget *Pages::createPage_Winch()
     statusLabel->setStyleSheet("font-size: 18px;");
     layout->addWidget(statusLabel);
 
-    // --- Height ---
-    heightLabel = new QLabel();
-    heightLabel->setStyleSheet("font-size: 18px;");
-    layout->addWidget(heightLabel);
+    // --- Temperature ---
+    tempLabel = new QLabel();
+    tempLabel->setStyleSheet("font-size: 18px;");
+    layout->addWidget(tempLabel);
 
     // --- Water Level ---
     waterLabel = new QLabel();
@@ -356,51 +350,6 @@ QWidget *Pages::createPage_Winch()
     });
 
     connect(client, &Network::requestFinished, this, [this](const QString &endpoint, const QString &response) {
-        // QString command;
-
-        // client->get(server + "/status");
-
-        // qDebug() << lastResponse;
-
-        // if (lastResponse == "up")
-        //     command = "down";
-        // else if (lastResponse == "down")
-        //     command = "up";
-
-        // QJsonObject json;
-        // json["command"] = command;
-
-        // client->post(server + "/command", json);
-
-        // qDebug() << command;
-
-        // QJsonDocument doc = QJsonDocument::fromJson(response.toUtf8());
-        // if (!doc.isObject()) return;
-
-        // QJsonObject obj = doc.object();
-        // // if (obj["status"] != "success") return;
-
-        // QString status = obj["status"].toString();
-
-        // // QString direction = winch["direction"].toString();
-
-        // // --- Update UI ---
-        // // statusLabel->setText("Direction: " + direction);
-        // // heightLabel->setText("Height: " + QString::number(winch["height"].toDouble()));
-        // // waterLabel->setText("Water: " + QString::number(winch["water_level"].toDouble()));
-        // // connectionLabel->setText(winch["connected"].toBool() ? "Connected" : "Disconnected");
-        // // idLabel->setText("ID: " + winch["id"].toString());
-
-        // // --- Decide next command ---
-        // QString command = (status == "up") ? "down" : "up";
-
-        // QJsonObject json;
-        // json["command"] = command;
-
-        // client->post(server + "/command", json);
-
-        // qDebug() << "Sent command:" << command;
-
         QJsonDocument doc = QJsonDocument::fromJson(response.toUtf8());
         if (!doc.isObject()) return;
 
@@ -419,6 +368,9 @@ QWidget *Pages::createPage_Winch()
             client->post(server + "/command", json);
 
             qDebug() << "Sent command:" << command;
+
+            // Show on app the changed status for demo
+            statusLabel->setText("Cage Status: " + command);
         }
 
         else if (endpoint == "/command") {
@@ -1307,7 +1259,7 @@ void Pages::getConfig()
         int number = obj["number"].toInt();
         bool connected = obj["connected"].toBool();
         bool isDown = obj["is_down"].toBool();
-        double cageHeight = obj["cage_height"].toDouble();
+        double waterTemp = obj["water_temp"].toDouble();
         double waterLevel = obj["water_level"].toDouble();
 
         QStringList operations;
@@ -1322,7 +1274,7 @@ void Pages::getConfig()
 
         addWinch->addConnection(connected);
         addWinch->addSubmersion(isDown);
-        addWinch->addCageHeight(cageHeight);
+        addWinch->addTemp(waterTemp);
         addWinch->addWaterLevel(waterLevel);
         addWinch->addOperationsSchedule(operations);
         addWinch->addImages(images);
@@ -1357,7 +1309,7 @@ void Pages::addEntryToConfig(int number)
     newWinch.insert("number", number);
     newWinch.insert("id", 12345);
     newWinch.insert("connected", true);
-    newWinch.insert("cage_height", 2.13);
+    newWinch.insert("water_temp", 71);
     newWinch.insert("water_level", 4.52);
 
     winches.append(newWinch);
@@ -1448,15 +1400,48 @@ void Pages::openWinchPage(int index)
 
     statusLabel->setText(currentWinch->displayCageStatus());
 
-    heightLabel->setText(
-        "Cage Height: " +
-        QString::number(currentWinch->displayCageHeight()) + " ft"
-        );
+    connect(client, &Network::requestError, this, [this](const QString &error) {
+        qDebug() << "Error:" << error;
+        tempLabel->setText(
+            "Temp: " +
+            QString::number(currentWinch->displayTemp()) + " F"
+            );
 
-    waterLabel->setText(
-        "Water Level: " +
-        QString::number(currentWinch->displayWaterLevel()) + " ft"
-        );
+        waterLabel->setText(
+            "Water Level: " +
+            QString::number(currentWinch->displayWaterLevel()) + " ft"
+            );
+    });
+
+    connect(client, &Network::requestFinished, this, [this](const QString &endpoint, const QString &response) {
+        QJsonDocument doc = QJsonDocument::fromJson(response.toUtf8());
+        if (!doc.isObject()) return;
+
+        QJsonObject obj = doc.object();
+        qDebug() << "Response received:" << obj;
+
+        if (endpoint == "/sensors") {
+            QString tempData = obj["data_temp"].toString();
+            QString tideData = obj["data_tide"].toString();
+
+            // Show on app the changed tide for demo
+            tempLabel->setText(
+                "Temp: " +
+                tempData + " F"
+                );
+            waterLabel->setText(
+                "Water Level: " +
+                tideData + " ft"
+                );
+        }
+
+        else if (endpoint == "/sensors") {
+            qDebug() << "Sensor data acknowledged";
+        }
+    });
+
+    client->get(server + "/sensors");
+    qDebug() << "Requested sensor data...";
 
     scheduleLabel->setText(currentWinch->displayOperationsSchedule());
 

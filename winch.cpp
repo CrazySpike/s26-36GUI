@@ -4,7 +4,7 @@ winch::winch(int num) {
     winchNumber = num;
     winchID = 12345;
     connected = true;
-    cageHeight = 2.13;
+    waterTemp = 71;
     waterLevel = 4.52;
 }
 
@@ -23,9 +23,9 @@ void winch::addSubmersion(const bool sub)
     cageDown = sub;
 }
 
-void winch::addCageHeight(const double height)
+void winch::addTemp(const double temp)
 {
-    cageHeight = height;
+    waterTemp = temp;
 }
 
 void winch::addWaterLevel(const double level)
@@ -60,12 +60,12 @@ bool winch::isConnected()
 QString winch::displayCageStatus() {
     QString status = "Cage Status: ";
 
-    return (cageDown) ? status + "Down" : status + "Up";
+    return (cageDown) ? status + "down" : status + "up";
 }
 
-double winch::displayCageHeight()
+double winch::displayTemp()
 {
-    return cageHeight;
+    return waterTemp;
 }
 
 double winch::displayWaterLevel()
