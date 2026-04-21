@@ -25,6 +25,7 @@
 #include <QCalendarWidget>
 #include <QDate>
 #include <QListWidget>
+#include <QPair>
 
 class QLabel;
 class QPushButton;
@@ -72,8 +73,6 @@ private:
     void switchPage(PageType prevPage, PageType nextPage);
     void switchPage(PageType type);
 
-    // Put evey possible scrollable area as a scrollbar (ex. help pages and winches)
-
     PageType lastPage;
 
     QPushButton *createButton(const QString &text, const QString &color);
@@ -86,6 +85,8 @@ private:
     void addEntryToConfig(int number);
     void getSchedule();
     void openWinchPage(int index);
+
+    QVector<QPair<QString, QString>> accounts = { { "User", "Password123" } };
 
     QPushButton *createWinchButton(winch entry);
 
@@ -119,6 +120,7 @@ private:
 
     Network *client;
     const QString server = "http://128.173.90.175:3001";
+    // const QString server = "http://172.18.0.7:3001";
 
     QString lastResponse;
 };

@@ -114,8 +114,12 @@ QWidget *Pages::createPage_Login() {
     auto *submitButton = createButton("Submit", "#4CAF50");
 
     // Connect the submit button
-    connect(submitButton, &QPushButton::clicked, this, [this]() {
-        switchPage(Login, Dashboard);
+    connect(submitButton, &QPushButton::clicked, this, [this, usernameEdit, passwordEdit]() {
+        for (const auto &entry : std::as_const(accounts)) {
+            if(usernameEdit->text() == entry.first && passwordEdit->text() == entry.second) {
+                switchPage(Login, Dashboard);
+            }
+        }
     });
 
     // Add widgets to the layout in order
@@ -129,6 +133,19 @@ QWidget *Pages::createPage_Login() {
     layout->addItem(new QSpacerItem(0, 0, QSizePolicy::Minimum, QSizePolicy::Expanding));
     layout->addWidget(middleBar, 0, Qt::AlignVCenter);
     layout->addItem(new QSpacerItem(0, 0, QSizePolicy::Minimum, QSizePolicy::Expanding));
+
+    // --- Bottom bar ---
+    auto *bottomBar = new QWidget();
+    auto *bottomLayout = new QHBoxLayout(bottomBar);
+
+    auto *backButton = createButton("Back", "#2196F3");
+
+    bottomLayout->addWidget(backButton);
+    layout->addWidget(bottomBar, 0, Qt::AlignBottom);
+
+    connect(backButton, &QPushButton::clicked, this, [this]() {
+        switchPage(Winch, Start);
+    });
 
     return page;
 }
@@ -166,11 +183,6 @@ QWidget *Pages::createPage_Account() {
     // Create the add button
     auto *addButton = createButton("Add", "#4CAF50");
 
-    // Connect the add button
-    connect(addButton, &QPushButton::clicked, this, [this]() {
-        switchPage(Account, Start);
-    });
-
     // Add widgets to the layout in order
     middleLayout->addWidget(usernameLabel);
     middleLayout->addWidget(usernameEdit);
@@ -179,11 +191,50 @@ QWidget *Pages::createPage_Account() {
     middleLayout->addWidget(passwordLabelAgain);
     middleLayout->addWidget(passwordEditAgain);
     middleLayout->addWidget(addButton, 0, Qt::AlignHCenter);
+
+    auto *error = new QLabel();
+    error->setStyleSheet("color: red; font-weight: bold;");
+    middleLayout->addWidget(error, 0, Qt::AlignHCenter);
+
+    // Connect the add button
+    connect(addButton, &QPushButton::clicked, this, [this, usernameEdit, passwordEdit, passwordEditAgain, error]() {
+        for (const auto &entry : std::as_const(accounts)) {
+            if(usernameEdit->text() == entry.first) {
+                error ->setText("Username is already being used");
+                return;
+            }
+        }
+
+        if (passwordEdit->text() != passwordEditAgain->text()) {
+            error->setText("Passwords do not match");
+            return;
+        }
+
+        QPair<QString, QString> newAccount(usernameEdit->text(), passwordEdit->text());
+        accounts.push_back(newAccount);
+
+        error->setText("");
+        switchPage(Account, Start);
+    });
+
     middleBar->setLayout(middleLayout);
 
     layout->addItem(new QSpacerItem(0, 0, QSizePolicy::Minimum, QSizePolicy::Expanding));
     layout->addWidget(middleBar, 0, Qt::AlignVCenter);
     layout->addItem(new QSpacerItem(0, 0, QSizePolicy::Minimum, QSizePolicy::Expanding));
+
+    // --- Bottom bar ---
+    auto *bottomBar = new QWidget();
+    auto *bottomLayout = new QHBoxLayout(bottomBar);
+
+    auto *backButton = createButton("Back", "#2196F3");
+
+    bottomLayout->addWidget(backButton);
+    layout->addWidget(bottomBar, 0, Qt::AlignBottom);
+
+    connect(backButton, &QPushButton::clicked, this, [this]() {
+        switchPage(Winch, Start);
+    });
 
     return page;
 }
@@ -372,7 +423,6 @@ QWidget *Pages::createPage_Winch()
             // Show on app the changed status for demo
             statusLabel->setText("Cage Status: " + command);
         }
-
         else if (endpoint == "/command") {
             qDebug() << "Command acknowledged";
         }
@@ -1400,48 +1450,54 @@ void Pages::openWinchPage(int index)
 
     statusLabel->setText(currentWinch->displayCageStatus());
 
-    connect(client, &Network::requestError, this, [this](const QString &error) {
-        qDebug() << "Error:" << error;
-        tempLabel->setText(
-            "Temp: " +
-            QString::number(currentWinch->displayTemp()) + " F"
-            );
+    // connect(client, &Network::requestError, this, [this](const QString &error) {
+    //     qDebug() << "Error:" << error;
+    //     tempLabel->setText(
+    //         "Temp: " +
+    //         QString::number(currentWinch->displayTemp()) + " F"
+    //         );
 
-        waterLabel->setText(
-            "Water Level: " +
-            QString::number(currentWinch->displayWaterLevel()) + " ft"
-            );
-    });
+    //     waterLabel->setText(
+    //         "Water Level: " +
+    //         QString::number(currentWinch->displayWaterLevel()) + " ft"
+    //         );
+    // });
 
-    connect(client, &Network::requestFinished, this, [this](const QString &endpoint, const QString &response) {
-        QJsonDocument doc = QJsonDocument::fromJson(response.toUtf8());
-        if (!doc.isObject()) return;
+    // connect(client, &Network::requestFinished, this, [this](const QString &endpoint, const QString &response) {
+    //     QJsonDocument doc = QJsonDocument::fromJson(response.toUtf8());
+    //     if (!doc.isObject()) return;
 
-        QJsonObject obj = doc.object();
-        qDebug() << "Response received:" << obj;
+    //     QJsonObject obj = doc.object();
+    //     qDebug() << "Response received:" << obj;
 
-        if (endpoint == "/sensors") {
-            QString tempData = obj["data_temp"].toString();
-            QString tideData = obj["data_tide"].toString();
+    //     if (endpoint == "/sensors") {
+    //         QString tempData = obj["data_temp"].toString();
+    //         QString tideData = obj["data_tide"].toString();
 
-            // Show on app the changed tide for demo
-            tempLabel->setText(
-                "Temp: " +
-                tempData + " F"
-                );
-            waterLabel->setText(
-                "Water Level: " +
-                tideData + " ft"
-                );
-        }
+    //         // Show on app the changed tide for demo
+    //         tempLabel->setText(
+    //             "Temp: " +
+    //             tempData + " F"
+    //             );
+    //         waterLabel->setText(
+    //             "Water Level: " +
+    //             tideData + " ft"
+    //             );
+    //     }
+    // });
 
-        else if (endpoint == "/sensors") {
-            qDebug() << "Sensor data acknowledged";
-        }
-    });
+    // client->get(server + "/sensors");
+    // qDebug() << "Requested sensor data...";
 
-    client->get(server + "/sensors");
-    qDebug() << "Requested sensor data...";
+    tempLabel->setText(
+        "Temp: " +
+        QString::number(currentWinch->displayTemp()) + " F"
+        );
+
+    waterLabel->setText(
+        "Water Level: " +
+        QString::number(currentWinch->displayWaterLevel()) + " ft"
+        );
 
     scheduleLabel->setText(currentWinch->displayOperationsSchedule());
 
